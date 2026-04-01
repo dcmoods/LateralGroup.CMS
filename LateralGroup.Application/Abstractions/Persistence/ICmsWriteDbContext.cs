@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace LateralGroup.Application.Common.Abstractions
+namespace LateralGroup.Application.Abstractions.Persistence
 {
     public interface ICmsWriteDbContext
     {

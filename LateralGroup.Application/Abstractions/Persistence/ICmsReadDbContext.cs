@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LateralGroup.Application.Common.Abstractions
+namespace LateralGroup.Application.Abstractions.Persistence
 {
     public interface ICmsReadDbContext
     {

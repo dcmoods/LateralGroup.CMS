@@ -1,4 +1,4 @@
-﻿using LateralGroup.Application.Common.Abstractions;
+﻿using LateralGroup.Application.Abstractions.Persistence;
 using LateralGroup.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

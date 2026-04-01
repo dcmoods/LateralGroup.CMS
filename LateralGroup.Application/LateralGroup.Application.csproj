@@ -14,4 +14,9 @@
     <ProjectReference Include="..\LateralGroup.Domain\LateralGroup.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Abstractions\Services\" />
+    <Folder Include="Common\" />
+  </ItemGroup>
+
 </Project>
