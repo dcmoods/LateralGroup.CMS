@@ -1,5 +1,7 @@
 ﻿using LateralGroup.Application.Abstractions.Persistence;
+using LateralGroup.Application.Abstractions.Services;
 using LateralGroup.Infrastructure.Persistence;
+using LateralGroup.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,8 @@ public static class DependencyInjection
 
         services.AddScoped<ICmsWriteDbContext>(sp => sp.GetRequiredService<CmsWriteDbContext>());
         services.AddScoped<ICmsReadDbContext>(sp => sp.GetRequiredService<CmsReadDbContext>());
+
+        services.AddScoped<IClock, SystemClockService>();
 
         return services;
     }
