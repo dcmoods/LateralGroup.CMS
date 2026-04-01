@@ -1,0 +1,6 @@
+@LateralGroup.API_HostAddress = http://localhost:5207
+
+GET {{LateralGroup.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

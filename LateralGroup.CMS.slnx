@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="LateralGroup.Application/LateralGroup.Application.csproj" />
+    <Project Path="LateralGroup.Domain/LateralGroup.Domain.csproj" />
+    <Project Path="LateralGroup.Infrastructure/LateralGroup.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Project Path="LateralGroup.API/LateralGroup.API.csproj" />
+</Solution>
