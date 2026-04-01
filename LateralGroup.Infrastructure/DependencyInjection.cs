@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using LateralGroup.Application.Common.Abstractions;
+using LateralGroup.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -10,7 +13,20 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton(configuration);
+
+        services.AddDbContext<CmsWriteDbContext>(options =>
+        {
+            options.UseSqlite(configuration.GetConnectionString("CmsWriteDatabase"));
+        });
+
+        services.AddDbContext<CmsReadDbContext>(options =>
+        {
+            options.UseSqlite(configuration.GetConnectionString("CmsReadDatabase"));
+            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        });
+
+        services.AddScoped<ICmsWriteDbContext>(sp => sp.GetRequiredService<CmsWriteDbContext>());
+        services.AddScoped<ICmsReadDbContext>(sp => sp.GetRequiredService<CmsReadDbContext>());
 
         return services;
     }

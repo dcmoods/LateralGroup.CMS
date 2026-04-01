@@ -18,8 +18,9 @@ public class ProcessedCmsEventConfiguration : IEntityTypeConfiguration<Processed
             .HasMaxLength(200);
 
         builder.Property(x => x.EventType)
-            .IsRequired()
-            .HasMaxLength(50);
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired();
 
         builder.Property(x => x.Version);
 
@@ -31,8 +32,9 @@ public class ProcessedCmsEventConfiguration : IEntityTypeConfiguration<Processed
             .HasColumnType("TEXT");
 
         builder.Property(x => x.Status)
-            .IsRequired()
-            .HasMaxLength(50);
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired();
 
         builder.Property(x => x.FailureReason)
             .HasMaxLength(2000);

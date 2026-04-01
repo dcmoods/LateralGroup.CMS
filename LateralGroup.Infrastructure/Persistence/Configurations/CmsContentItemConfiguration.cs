@@ -37,8 +37,9 @@ public partial class CmsContentItemConfiguration : IEntityTypeConfiguration<CmsC
             .IsRequired();
 
         builder.Property(x => x.LastEventType)
-            .IsRequired()
-            .HasMaxLength(50);
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired();
 
         builder.Property(x => x.CreatedUtc)
             .IsRequired();

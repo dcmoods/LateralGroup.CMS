@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using LateralGroup.Domain.Enums;
 
 namespace LateralGroup.Domain.Entities;
 
@@ -16,7 +14,7 @@ public class CmsContentItem
     public bool IsDisabledByAdmin { get; set; }
 
     public DateTimeOffset LastEventTimestampUtc { get; set; }
-    public string LastEventType { get; set; } = default!;
+    public CmsEventType LastEventType { get; set; }
 
     public DateTimeOffset CreatedUtc { get; set; }
     public DateTimeOffset UpdatedUtc { get; set; }
