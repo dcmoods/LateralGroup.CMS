@@ -7,6 +7,8 @@
     <Project Path="LateralGroup.Domain/LateralGroup.Domain.csproj" />
     <Project Path="LateralGroup.Infrastructure/LateralGroup.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/LateralGroup.Application.Tests/LateralGroup.Application.Tests.csproj" />
+  </Folder>
   <Project Path="LateralGroup.API/LateralGroup.API.csproj" />
 </Solution>
