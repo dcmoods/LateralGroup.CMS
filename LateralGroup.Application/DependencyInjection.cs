@@ -13,6 +13,7 @@ public static class DependencyInjection
     {
 
         services.AddScoped<ICmsEventProcessor, CmsEventProcessor>();
+        services.AddScoped<ICmsContentQueryService, CmsContentQueryService>();
 
         return services;
     }

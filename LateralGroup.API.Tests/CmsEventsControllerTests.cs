@@ -1,5 +1,4 @@
-﻿
-using LateralGroup.Application.Models;
+﻿using LateralGroup.Application.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Json;
 
