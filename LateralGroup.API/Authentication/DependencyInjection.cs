@@ -11,7 +11,9 @@ public static class DependencyInjection
         var authOptions = authSection.Get<BasicAuthOptions>() ?? new BasicAuthOptions();
         Validate(authOptions);
 
-        services.AddSingleton(authOptions);
+        //services.AddSingleton(authOptions);
+
+        services.Configure<BasicAuthOptions>(authSection);
 
         services
             .AddAuthentication(AuthConstants.Scheme)

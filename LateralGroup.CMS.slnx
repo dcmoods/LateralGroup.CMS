@@ -8,6 +8,7 @@
     <Project Path="LateralGroup.Infrastructure/LateralGroup.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="LateralGroup.API.Tests/LateralGroup.API.Tests.csproj" Id="41b38086-4dff-4c95-a130-2611e57d1e47" />
     <Project Path="tests/LateralGroup.Application.Tests/LateralGroup.Application.Tests.csproj" />
   </Folder>
   <Project Path="LateralGroup.API/LateralGroup.API.csproj" />

@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\LateralGroup.Application\LateralGroup.Application.csproj" />
     <ProjectReference Include="..\LateralGroup.Infrastructure\LateralGroup.Infrastructure.csproj" />
   </ItemGroup>
