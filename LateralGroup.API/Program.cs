@@ -17,8 +17,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var writeDbContext = scope.ServiceProvider.GetRequiredService<CmsWriteDbContext>();
     writeDbContext.Database.Migrate();
 }
