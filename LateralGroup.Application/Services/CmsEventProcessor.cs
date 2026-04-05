@@ -10,7 +10,7 @@ using System.Text.Json;
 namespace LateralGroup.Application.Services;
 public sealed class CmsEventProcessor : ICmsEventProcessor
 {
-    private readonly ICmsWriteDbContext _dbContext;
+    private readonly ICmsWriteDbContext _writeDbContext;
     private readonly IClock _clock;
     private readonly ILogger<CmsEventProcessor> _logger;
 
@@ -19,7 +19,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
         IClock clock,
         ILogger<CmsEventProcessor> logger)
     {
-        _dbContext = dbContext;
+        _writeDbContext = dbContext;
         _clock = clock;
         _logger = logger;
     }
@@ -61,7 +61,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
                         failureReason: validationError,
                         cancellationToken: cancellationToken);
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _writeDbContext.SaveChangesAsync(cancellationToken);
 
                     _logger.LogWarning(
                         "Failed CMS event for content item {ContentItemId}. Reason: {Reason}",
@@ -73,7 +73,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
 
                 var eventType = ParseEventType(input.Type);
 
-                var entity = await _dbContext.ContentItems
+                var entity = await _writeDbContext.ContentItems
                     .Include(x => x.Versions)
                     .FirstOrDefaultAsync(x => x.Id == input.Id, cancellationToken);
 
@@ -87,7 +87,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
                         failureReason: "Ignored stale event.",
                         cancellationToken: cancellationToken);
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _writeDbContext.SaveChangesAsync(cancellationToken);
 
                     _logger.LogInformation(
                         "Ignored stale {EventType} event for content item {ContentItemId}.",
@@ -121,7 +121,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
                     failureReason: null,
                     cancellationToken: cancellationToken);
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _writeDbContext.SaveChangesAsync(cancellationToken);
 
                 processed++;
 
@@ -145,7 +145,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
                     failureReason: ex.Message,
                     cancellationToken: cancellationToken);
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _writeDbContext.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -172,21 +172,13 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
             CreatedUtc = _clock.UtcNow
         };
 
-        entity.LatestKnownVersion = version;
-        entity.LatestPublishedVersion = version;
-        entity.LatestPayloadJson = payloadJson;
-        entity.IsPublished = true;
-        entity.IsDisabledByCms = false;
-        entity.LastEventTimestampUtc = input.Timestamp;
-        entity.LastEventType = CmsEventType.Publish;
-        entity.UpdatedUtc = _clock.UtcNow;
+        entity.Publish(version, payloadJson, input.Timestamp, _clock.UtcNow);
 
-        if (_dbContext.Entry(entity).State == EntityState.Detached)
+        if (_writeDbContext.Entry(entity).State == EntityState.Detached)
         {
-            _dbContext.ContentItems.Add(entity);
+            _writeDbContext.ContentItems.Add(entity);
         }
 
-        UpsertVersion(entity, version, payloadJson, wasPublished: true, wasUnpublished: false);
         await Task.CompletedTask;
     }
 
@@ -204,20 +196,14 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
             CreatedUtc = _clock.UtcNow
         };
 
-        entity.LatestKnownVersion = version;
-        entity.LatestPayloadJson = payloadJson;
-        entity.IsPublished = false;
-        entity.IsDisabledByCms = true;
-        entity.LastEventTimestampUtc = input.Timestamp;
-        entity.LastEventType = CmsEventType.Unpublish;
-        entity.UpdatedUtc = _clock.UtcNow;
 
-        if (_dbContext.Entry(entity).State == EntityState.Detached)
+        entity.Unpublish(version, payloadJson, input.Timestamp, _clock.UtcNow);
+
+        if (_writeDbContext.Entry(entity).State == EntityState.Detached)
         {
-            _dbContext.ContentItems.Add(entity);
+            _writeDbContext.ContentItems.Add(entity);
         }
 
-        UpsertVersion(entity, version, payloadJson, wasPublished: false, wasUnpublished: true);
         await Task.CompletedTask;
     }
 
@@ -231,41 +217,10 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
             return;
         }
 
-        _dbContext.ContentVersions.RemoveRange(entity.Versions);
-        _dbContext.ContentItems.Remove(entity);
+        _writeDbContext.ContentVersions.RemoveRange(entity.Versions);
+        _writeDbContext.ContentItems.Remove(entity);
 
         await Task.CompletedTask;
-    }
-
-    private void UpsertVersion(
-        CmsContentItem entity,
-        int version,
-        string payloadJson,
-        bool wasPublished,
-        bool wasUnpublished)
-    {
-        var existingVersion = entity.Versions.FirstOrDefault(x => x.Version == version);
-
-        if (existingVersion is null)
-        {
-            existingVersion = new CmsContentVersion
-            {
-                ContentItemId = entity.Id,
-                Version = version,
-                PayloadJson = payloadJson,
-                WasPublished = wasPublished,
-                WasUnpublished = wasUnpublished,
-                ObservedAtUtc = _clock.UtcNow
-            };
-
-            entity.Versions.Add(existingVersion);
-            return;
-        }
-
-        existingVersion.PayloadJson = payloadJson;
-        existingVersion.WasPublished = existingVersion.WasPublished || wasPublished;
-        existingVersion.WasUnpublished = existingVersion.WasUnpublished || wasUnpublished;
-        existingVersion.ObservedAtUtc = _clock.UtcNow;
     }
 
     private async Task AddProcessedEventLogAsync(
@@ -288,7 +243,7 @@ public sealed class CmsEventProcessor : ICmsEventProcessor
             CreatedUtc = _clock.UtcNow
         };
 
-        _dbContext.ProcessedCmsEvents.Add(log);
+        _writeDbContext.ProcessedCmsEvents.Add(log);
         await Task.CompletedTask;
     }
 

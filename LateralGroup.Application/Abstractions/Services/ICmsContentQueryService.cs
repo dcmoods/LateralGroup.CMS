@@ -1,7 +1,4 @@
 ﻿using LateralGroup.Application.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LateralGroup.Application.Abstractions.Services;
 
