@@ -7,13 +7,13 @@ namespace LateralGroup.Infrastructure.Persistence
 {
     public sealed class CmsReadDbContext(DbContextOptions options) : DbContext(options), ICmsReadDbContext
     {
-        public DbSet<CmsContentItem> CmsContentItems => Set<CmsContentItem>();
-        public DbSet<CmsContentVersion> CmsContentVersions => Set<CmsContentVersion>();
-        public DbSet<ProcessedCmsEvent> CmsProcessedCmsEvents => Set<ProcessedCmsEvent>();
+        public DbSet<CmsContentItem> ContentItems => Set<CmsContentItem>();
+        public DbSet<CmsContentVersion> ContentVersions => Set<CmsContentVersion>();
+        public DbSet<ProcessedCmsEvent> ProcessedCmsEvents => Set<ProcessedCmsEvent>();
 
-        IQueryable<CmsContentItem> ICmsReadDbContext.ContentItems => CmsContentItems;
-        IQueryable<CmsContentVersion> ICmsReadDbContext.ContentVersions => CmsContentVersions;
-        IQueryable<ProcessedCmsEvent> ICmsReadDbContext.ProcessedCmsEvents => CmsProcessedCmsEvents;
+        IQueryable<CmsContentItem> ICmsReadDbContext.ContentItems => ContentItems;
+        IQueryable<CmsContentVersion> ICmsReadDbContext.ContentVersions => ContentVersions;
+        IQueryable<ProcessedCmsEvent> ICmsReadDbContext.ProcessedCmsEvents => ProcessedCmsEvents;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

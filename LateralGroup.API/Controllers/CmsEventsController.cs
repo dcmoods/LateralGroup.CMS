@@ -10,7 +10,7 @@ namespace LateralGroup.API.Controllers;
 [ApiController]
 [Route("cms/events")]
 [Authorize(Policy = AuthConstants.CmsPolicy)]
-public class CmsEventsController : Controller
+public class CmsEventsController : ControllerBase
 {
     private readonly ICmsEventProcessor _eventProcessor;
 

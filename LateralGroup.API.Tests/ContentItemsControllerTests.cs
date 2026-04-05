@@ -1,0 +1,161 @@
+using LateralGroup.API.Contracts.Cms;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+
+namespace LateralGroup.API.Tests;
+
+public class ContentItemsControllerTests
+{
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public ContentItemsControllerTests()
+    {
+        _factory = new WebApplicationFactory<Program>();
+    }
+
+    [Fact]
+    public async Task Get_ConsumerUser_ReturnsVisiblePublishedItems()
+    {
+        var itemId = $"visible-{Guid.NewGuid():N}";
+        await PublishAsync(itemId, "Hello");
+
+        var consumerClient = CreateAuthenticatedClient("consumerapi1", "5233c2da-c875-4920-a1a7-fca8c44902c4");
+
+        var response = await consumerClient.GetAsync("/api/content-items");
+
+        response.EnsureSuccessStatusCode();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<List<CmsContentItemResponse>>();
+
+        Assert.NotNull(content);
+        Assert.Contains(content, item => item.Id == itemId);
+    }
+
+    [Fact]
+    public async Task Get_ConsumerUser_HidesUnpublishedItems()
+    {
+        var hiddenItemId = $"hidden-{Guid.NewGuid():N}";
+        await UnpublishAsync(hiddenItemId, "Hidden");
+
+        var consumerClient = CreateAuthenticatedClient("consumerapi1", "5233c2da-c875-4920-a1a7-fca8c44902c4");
+
+        var response = await consumerClient.GetAsync("/api/content-items");
+
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<List<CmsContentItemResponse>>();
+
+        Assert.NotNull(content);
+        Assert.DoesNotContain(content, item => item.Id == hiddenItemId);
+    }
+
+    [Fact]
+    public async Task Get_AdminUser_ReturnsUnpublishedItems()
+    {
+        var hiddenItemId = $"admin-visible-{Guid.NewGuid():N}";
+        await UnpublishAsync(hiddenItemId, "Hidden for consumer");
+
+        var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
+
+        var response = await adminClient.GetAsync("/api/content-items");
+
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadFromJsonAsync<List<CmsContentItemResponse>>();
+
+        Assert.NotNull(content);
+        var item = Assert.Single(content.Where(x => x.Id == hiddenItemId));
+        Assert.False(item.IsPublished);
+        Assert.True(item.IsDisabledByCms);
+    }
+
+    [Fact]
+    public async Task GetById_ConsumerUser_ReturnsNotFound_ForUnpublishedItem()
+    {
+        var hiddenItemId = $"byid-hidden-{Guid.NewGuid():N}";
+        await UnpublishAsync(hiddenItemId, "Hidden by id");
+
+        var consumerClient = CreateAuthenticatedClient("consumerapi1", "5233c2da-c875-4920-a1a7-fca8c44902c4");
+
+        var response = await consumerClient.GetAsync($"/api/content-items/{hiddenItemId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetById_AdminUser_ReturnsItem_ForUnpublishedItem()
+    {
+        var hiddenItemId = $"byid-admin-{Guid.NewGuid():N}";
+        await UnpublishAsync(hiddenItemId, "Visible to admin");
+
+        var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
+
+        var response = await adminClient.GetAsync($"/api/content-items/{hiddenItemId}");
+
+        response.EnsureSuccessStatusCode();
+
+        var item = await response.Content.ReadFromJsonAsync<CmsContentItemResponse>();
+
+        Assert.NotNull(item);
+        Assert.Equal(hiddenItemId, item.Id);
+        Assert.False(item.IsPublished);
+        Assert.True(item.IsDisabledByCms);
+    }
+
+    private HttpClient CreateAuthenticatedClient(string username, string password)
+    {
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Basic",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}")));
+
+        return client;
+    }
+
+    private async Task PublishAsync(string id, string title)
+    {
+        var cmsClient = CreateAuthenticatedClient("cmsingest01", "1d9d2745-37d8-4836-84ec-b45f57c2a95d");
+
+        var response = await cmsClient.PostAsJsonAsync("/cms/events", new[]
+        {
+            new
+            {
+                type = "publish",
+                id,
+                payload = new { title },
+                version = 1,
+                timestamp = "2026-01-01T00:00:00Z"
+            }
+        });
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task UnpublishAsync(string id, string title)
+    {
+        var cmsClient = CreateAuthenticatedClient("cmsingest01", "1d9d2745-37d8-4836-84ec-b45f57c2a95d");
+
+        var response = await cmsClient.PostAsJsonAsync("/cms/events", new[]
+        {
+            new
+            {
+                type = "unpublish",
+                id,
+                payload = new { title },
+                version = 1,
+                timestamp = "2026-01-01T00:00:00Z"
+            }
+        });
+
+        response.EnsureSuccessStatusCode();
+    }
+}

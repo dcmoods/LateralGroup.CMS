@@ -33,7 +33,9 @@ public class CmsContentQueryService : ICmsContentQueryService
                 PayloadJson = item.LatestPayloadJson,
                 LastEventTimestampUtc = item.LastEventTimestampUtc,
                 LastEventType = item.LastEventType
-            }).ToListAsync(cancellationToken);
+            })
+            .OrderBy(item => item.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<CmsContentItemResult?> GetByIdAsync(string id, 
