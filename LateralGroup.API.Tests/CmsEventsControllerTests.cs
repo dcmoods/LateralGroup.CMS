@@ -299,7 +299,6 @@ namespace LateralGroup.API.Tests
             Assert.Equal(1, result.Processed);
             Assert.Equal(0, result.Ignored);
             Assert.Equal(0, result.Failed);
-
         }
     }
 }
