@@ -4,8 +4,15 @@ using LateralGroup.Infrastructure;
 using LateralGroup.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console());
 
 // Add services to the container.
 builder.Services.AddApplication();
@@ -18,6 +25,8 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+Log.Information("Starting LateralGroup CMS API");
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -25,13 +34,13 @@ if (app.Environment.IsDevelopment())
     writeDbContext.Database.Migrate();
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference("/docs");
 }
 
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
