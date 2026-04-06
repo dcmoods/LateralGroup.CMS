@@ -3,6 +3,7 @@ using LateralGroup.Application;
 using LateralGroup.Infrastructure;
 using LateralGroup.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,7 @@ if (app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference("/docs");
 }
 
 app.UseHttpsRedirection();
