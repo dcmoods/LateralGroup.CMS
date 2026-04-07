@@ -1,6 +1,158 @@
-@LateralGroup.API_HostAddress = http://localhost:5207
+@host = https://localhost:7141
 
-GET {{LateralGroup.API_HostAddress}}/weatherforecast/
+@cmsAuth = Basic Y21zaW5nZXN0MDE6MWQ5ZDI3NDUtMzdkOC00ODM2LTg0ZWMtYjQ1ZjU3YzJhOTVk
+@consumerAuth = Basic Y29uc3VtZXJhcGkxOjUyMzNjMmRhLWM4NzUtNDkyMC1hMWE3LWZjYThjNDQ5MDJjNA==
+@adminAuth = Basic YWRtaW52aWV3ZXIxOjNjYTVlODY0LTZiY2YtNGNkMC1hMmYxLTJmNjVkYzVmYmNhYg==
+
+### CMS publish item
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "publish",
+    "id": "walkthrough-item-1",
+    "payload": {
+      "title": "Hello world",
+      "slug": "hello-world",
+      "body": "First published version"
+    },
+    "version": 1,
+    "timestamp": "2026-04-06T12:00:00Z"
+  }
+]
+
+### CMS publish update
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "publish",
+    "id": "walkthrough-item-1",
+    "payload": {
+      "title": "Hello world updated",
+      "slug": "hello-world",
+      "body": "Second published version"
+    },
+    "version": 2,
+    "timestamp": "2026-04-06T12:05:00Z"
+  }
+]
+
+### CMS unpublish item
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "unpublish",
+    "id": "walkthrough-item-2",
+    "payload": {
+      "title": "Unpublished item",
+      "slug": "unpublished-item",
+      "body": "This should only be visible to admins"
+    },
+    "version": 1,
+    "timestamp": "2026-04-06T12:10:00Z"
+  }
+]
+
+### CMS stale publish event
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "publish",
+    "id": "walkthrough-item-1",
+    "payload": {
+      "title": "Old content",
+      "slug": "hello-world",
+      "body": "This should be ignored"
+    },
+    "version": 1,
+    "timestamp": "2026-04-06T11:00:00Z"
+  }
+]
+
+### CMS validation failure example
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "publish",
+    "id": "walkthrough-item-invalid",
+    "payload": {
+      "title": "Missing version"
+    },
+    "timestamp": "2026-04-06T12:25:00Z"
+  }
+]
+
+### Consumer get all visible content
+GET {{host}}/api/content-items
+Authorization: {{consumerAuth}}
 Accept: application/json
 
-###
+### Consumer get visible item by id
+GET {{host}}/api/content-items/walkthrough-item-1
+Authorization: {{consumerAuth}}
+Accept: application/json
+
+### Consumer get unpublished item by id - expected 404
+GET {{host}}/api/content-items/walkthrough-item-2
+Authorization: {{consumerAuth}}
+Accept: application/json
+
+### Admin get all content including unpublished/admin-disabled
+GET {{host}}/api/content-items
+Authorization: {{adminAuth}}
+Accept: application/json
+
+### Admin get unpublished item by id
+GET {{host}}/api/content-items/walkthrough-item-2
+Authorization: {{adminAuth}}
+Accept: application/json
+
+### Admin disable published item
+POST {{host}}/api/content-items/walkthrough-item-1/disable
+Authorization: {{adminAuth}}
+
+### Consumer get disabled item by id - expected 404
+GET {{host}}/api/content-items/walkthrough-item-1
+Authorization: {{consumerAuth}}
+Accept: application/json
+
+### Admin enable previously disabled item
+POST {{host}}/api/content-items/walkthrough-item-1/enable
+Authorization: {{adminAuth}}
+
+### Consumer can see re-enabled item again
+GET {{host}}/api/content-items/walkthrough-item-1
+Authorization: {{consumerAuth}}
+Accept: application/json
+
+### CMS hard delete
+POST {{host}}/cms/events
+Authorization: {{cmsAuth}}
+Content-Type: application/json
+
+[
+  {
+    "type": "delete",
+    "id": "walkthrough-item-1",
+    "timestamp": "2026-04-06T12:30:00Z"
+  }
+]
+
+### Consumer get deleted item by id - expected 404
+GET {{host}}/api/content-items/walkthrough-item-1
+Authorization: {{consumerAuth}}
+Accept: application/json

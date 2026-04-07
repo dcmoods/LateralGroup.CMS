@@ -26,11 +26,26 @@ namespace LateralGroup.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
+            var userIsAdmin = User.IsInRole(AuthConstants.AdminRole);
             var result = await _cmsContentQueryService.GetAllAsync(
-                User.IsInRole(AuthConstants.AdminRole),
+                userIsAdmin,
                 cancellationToken);
 
-            var response = result.Select(item => item.ToResponse());
+            //if (userIsAdmin)
+            //{
+            //    var response = result.Select(item => item.ToAdminResponse());
+            //    return Ok(response);
+            //}
+            //else
+            //{
+            //    var response = result.Select(item => item.ToResponse());
+            //    return Ok(response);
+            //}
+
+            var response = userIsAdmin
+                    ? result.Select(item => item.ToAdminResponse())
+                    : result.Select(item => item.ToResponse());
+
             return Ok(response);
         }
 
@@ -41,19 +56,21 @@ namespace LateralGroup.API.Controllers
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest("Id cannot be null or empty.");
 
+            var userIsAdmin = User.IsInRole(AuthConstants.AdminRole);
             var result = await _cmsContentQueryService.GetByIdAsync(
                 id,
-                User.IsInRole(AuthConstants.AdminRole),
+                userIsAdmin,
                 cancellationToken);
 
             if (result == null)
                 return NotFound();
 
-            var response = result.ToResponse();
+            
+            var response = userIsAdmin ? result.ToAdminResponse() : result.ToResponse();
             return Ok(response);
         }
 
-        [HttpPost("/admin/{id}/disable")]
+        [HttpPost("{id}/disable")]
         [Authorize(Policy = AuthConstants.AdminPolicy)]
         public async Task<IActionResult> Disable(string id, CancellationToken cancellation)
         {
@@ -64,7 +81,7 @@ namespace LateralGroup.API.Controllers
             return updated ? NoContent() : NotFound();
         }
 
-        [HttpPost("/admin/{id}/enable")]
+        [HttpPost("{id}/enable")]
         [Authorize(Policy = AuthConstants.AdminPolicy)]
         public async Task<IActionResult> Enable(string id, CancellationToken cancellation)
         {

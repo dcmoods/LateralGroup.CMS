@@ -27,12 +27,25 @@ Supported event types:
 
 ### Key behaviors handled
 
--   Only **published content** is visible to consumers\
--   **Unpublish does not delete** content\
--   **Delete does remove** content\
--   **Stale/out-of-order events are ignored**\
--   **Version history is retained**\
+-   Only **published content** is visible to consumers
+-   **Unpublish does not delete** content
+-   **Delete does remove** content
+-   **Stale/out-of-order events are ignored**
+-   **Version history is retained**
 -   **Admins can locally disable content** without affecting CMS state
+
+### Processing approach
+
+Webhook events are processed synchronously in the request pipeline.
+
+I chose that for this take-home because:
+
+- it keeps the flow easier to reason about
+- the caller gets an immediate processing summary
+- it avoids adding queue/background worker complexity that would not materially improve the core assessment goals
+- it makes testing and debugging simpler
+
+If throughput requirements increased later, this could be moved behind a queue or background processing model, but for the current scope synchronous processing felt like the clearest tradeoff.
 
 ------------------------------------------------------------------------
 
@@ -77,7 +90,8 @@ There are three access boundaries:
 -   **CMS webhook user**
     -   Can only call `/cms/events`
 -   **Consumer user**
-    -   Can read content
+    -   Can read content (only published and not disabled)
+      -   Disabled by admin returns 404
 -   **Admin user**
     -   Can read all content + perform admin actions
 
@@ -167,6 +181,12 @@ SQLite is used for persistence.
 Available in development:
 
     /docs
+
+There is also a ready-to-run HTTP request walkthrough in:
+
+    LateralGroup.API/LateralGroup.API.http
+
+That file includes CMS, consumer, and admin requests for manual testing.
 
 ------------------------------------------------------------------------
 

@@ -27,9 +27,8 @@ var app = builder.Build();
 
 Log.Information("Starting LateralGroup CMS API");
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var writeDbContext = scope.ServiceProvider.GetRequiredService<CmsWriteDbContext>();
     writeDbContext.Database.Migrate();
 }

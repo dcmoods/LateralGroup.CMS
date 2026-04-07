@@ -69,7 +69,7 @@ public class ContentItemsControllerTests
         var content = await response.Content.ReadFromJsonAsync<List<CmsContentItemResponse>>();
 
         Assert.NotNull(content);
-        var item = Assert.Single(content.Where(x => x.Id == hiddenItemId));
+        var item = Assert.Single(content, x => x.Id == hiddenItemId);
         Assert.False(item.IsPublished);
         Assert.True(item.IsDisabledByCms);
     }
@@ -115,7 +115,7 @@ public class ContentItemsControllerTests
 
         var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
 
-        var disableResponse = await adminClient.PostAsync($"/admin/{itemId}/disable", content: null);
+        var disableResponse = await adminClient.PostAsync($"/api/content-items/{itemId}/disable", content: null);
 
         Assert.Equal(HttpStatusCode.NoContent, disableResponse.StatusCode);
 
@@ -129,7 +129,7 @@ public class ContentItemsControllerTests
 
         var adminListResponse = await adminClient.GetAsync("/api/content-items");
         adminListResponse.EnsureSuccessStatusCode();
-        var adminItems = await adminListResponse.Content.ReadFromJsonAsync<List<CmsContentItemResponse>>();
+        var adminItems = await adminListResponse.Content.ReadFromJsonAsync<List<AdminContentItemResponse>>();
 
         Assert.NotNull(adminItems);
         var adminItem = Assert.Single(adminItems, item => item.Id == itemId);
@@ -144,7 +144,7 @@ public class ContentItemsControllerTests
 
         var consumerClient = CreateAuthenticatedClient("consumerapi1", "5233c2da-c875-4920-a1a7-fca8c44902c4");
 
-        var response = await consumerClient.PostAsync($"/admin/{itemId}/disable", content: null);
+        var response = await consumerClient.PostAsync($"/api/content-items/{itemId}/disable", content: null);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -157,10 +157,10 @@ public class ContentItemsControllerTests
 
         var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
 
-        var disableResponse = await adminClient.PostAsync($"/admin/{itemId}/disable", content: null);
+        var disableResponse = await adminClient.PostAsync($"/api/content-items/{itemId}/disable", content: null);
         Assert.Equal(HttpStatusCode.NoContent, disableResponse.StatusCode);
 
-        var enableResponse = await adminClient.PostAsync($"/admin/{itemId}/enable", content: null);
+        var enableResponse = await adminClient.PostAsync($"/api/content-items/{itemId}/enable", content: null);
         Assert.Equal(HttpStatusCode.NoContent, enableResponse.StatusCode);
 
         var consumerClient = CreateAuthenticatedClient("consumerapi1", "5233c2da-c875-4920-a1a7-fca8c44902c4");
@@ -177,7 +177,7 @@ public class ContentItemsControllerTests
     {
         var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
 
-        var response = await adminClient.PostAsync($"/admin/{Guid.NewGuid():N}/disable", content: null);
+        var response = await adminClient.PostAsync($"/api/content-items/{Guid.NewGuid():N}/disable", content: null);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
