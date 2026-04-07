@@ -31,17 +31,6 @@ namespace LateralGroup.API.Controllers
                 userIsAdmin,
                 cancellationToken);
 
-            //if (userIsAdmin)
-            //{
-            //    var response = result.Select(item => item.ToAdminResponse());
-            //    return Ok(response);
-            //}
-            //else
-            //{
-            //    var response = result.Select(item => item.ToResponse());
-            //    return Ok(response);
-            //}
-
             var response = userIsAdmin
                     ? result.Select(item => item.ToAdminResponse())
                     : result.Select(item => item.ToResponse());
@@ -52,10 +41,6 @@ namespace LateralGroup.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
         {
-
-            if (string.IsNullOrWhiteSpace(id))
-                return BadRequest("Id cannot be null or empty.");
-
             var userIsAdmin = User.IsInRole(AuthConstants.AdminRole);
             var result = await _cmsContentQueryService.GetByIdAsync(
                 id,
@@ -74,21 +59,28 @@ namespace LateralGroup.API.Controllers
         [Authorize(Policy = AuthConstants.AdminPolicy)]
         public async Task<IActionResult> Disable(string id, CancellationToken cancellation)
         {
-            if (id == null)
-                return BadRequest("Id cannot be null.");
-
-            var updated = await _cmsAdminService.DisableAsync(id, cancellation);
-            return updated ? NoContent() : NotFound();
+            var result = await _cmsAdminService.DisableAsync(id, cancellation);
+            return result switch
+            {
+                CmsAdminActionResult.NotFound => NotFound(),
+                CmsAdminActionResult.NoChange => NoContent(),
+                CmsAdminActionResult.Updated => NoContent(),
+                _ => StatusCode(StatusCodes.Status500InternalServerError)
+            };
         }
 
         [HttpPost("{id}/enable")]
         [Authorize(Policy = AuthConstants.AdminPolicy)]
         public async Task<IActionResult> Enable(string id, CancellationToken cancellation)
         {
-            if (id == null)
-                return BadRequest("Id cannot be null.");
-            var updated = await _cmsAdminService.EnableAsync(id, cancellation);
-            return updated ? NoContent() : NotFound();
+            var result = await _cmsAdminService.EnableAsync(id, cancellation);
+            return result switch
+            {
+                CmsAdminActionResult.NotFound => NotFound(),
+                CmsAdminActionResult.NoChange => NoContent(),
+                CmsAdminActionResult.Updated => NoContent(),
+                _ => StatusCode(StatusCodes.Status500InternalServerError)
+            };
         }
     }
 }

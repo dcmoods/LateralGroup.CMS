@@ -2,11 +2,11 @@
 
 public interface ICmsAdminService
 {
-    Task<bool> DisableAsync(
+    Task<CmsAdminActionResult> DisableAsync(
         string id,
         CancellationToken cancellationToken = default);
 
-    Task<bool> EnableAsync(
+    Task<CmsAdminActionResult> EnableAsync(
         string id,
         CancellationToken cancellationToken = default);
 }

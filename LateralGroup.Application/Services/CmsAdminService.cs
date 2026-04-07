@@ -1,5 +1,6 @@
 ﻿using LateralGroup.Application.Abstractions.Persistence;
 using LateralGroup.Application.Abstractions.Services;
+using LateralGroup.Application.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,45 +19,51 @@ public class CmsAdminService : ICmsAdminService
         _logger = logger;
     }
 
-    public async Task<bool> DisableAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<CmsAdminActionResult> DisableAsync(string id, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ValidationException("Id cannot be null or empty.");
+
         var contentItem = await _writeDbContext.ContentItems
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (contentItem == null)
         {
             _logger.LogWarning("Attempted to disable non-existent content item with ID {ContentItemId}", id);
-            return false;
+            return CmsAdminActionResult.NotFound;
         }
         if (contentItem.IsDisabledByAdmin)
         {
             _logger.LogInformation("Content item with ID {ContentItemId} is already disabled by admin", id);
-            return false;
+            return CmsAdminActionResult.NoChange;
         }
         contentItem.DisableByAdmin(_clock.UtcNow);
         await _writeDbContext.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Content item with ID {ContentItemId} has been disabled by admin", id);
-        return true;
+        return CmsAdminActionResult.Updated;
     }
 
-    public async Task<bool> EnableAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<CmsAdminActionResult> EnableAsync(string id, CancellationToken cancellationToken = default)
     {
+        if(string.IsNullOrWhiteSpace(id))
+            throw new ValidationException("Id cannot be null or empty.");
+
         var contentItem = await _writeDbContext.ContentItems
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (contentItem == null)
         {
             _logger.LogWarning("Attempted to enable non-existent content item with ID {ContentItemId}", id);
-            return false;
+            return CmsAdminActionResult.NotFound;
         }
 
         if (!contentItem.IsDisabledByAdmin)
         {
             _logger.LogInformation("Content item with ID {ContentItemId} is not currently disabled by admin", id);
-            return false;
+            return CmsAdminActionResult.NoChange;
         }
         contentItem.EnableByAdmin(_clock.UtcNow);
         await _writeDbContext.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Content item with ID {ContentItemId} has been enabled by admin", id);
-        return true;
+        return CmsAdminActionResult.Updated;
     }
 }

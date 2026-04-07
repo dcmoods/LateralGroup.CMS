@@ -182,6 +182,34 @@ public class ContentItemsControllerTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Disable_WhenAlreadyDisabled_ReturnsNoContent()
+    {
+        var itemId = $"already-disabled-{Guid.NewGuid():N}";
+        await PublishAsync(itemId, "Already disabled");
+
+        var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
+
+        var firstResponse = await adminClient.PostAsync($"/api/content-items/{itemId}/disable", content: null);
+        var secondResponse = await adminClient.PostAsync($"/api/content-items/{itemId}/disable", content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, secondResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Enable_WhenAlreadyEnabled_ReturnsNoContent()
+    {
+        var itemId = $"already-enabled-{Guid.NewGuid():N}";
+        await PublishAsync(itemId, "Already enabled");
+
+        var adminClient = CreateAuthenticatedClient("adminviewer1", "3ca5e864-6bcf-4cd0-a2f1-2f65dc5fbcab");
+
+        var response = await adminClient.PostAsync($"/api/content-items/{itemId}/enable", content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
     private HttpClient CreateAuthenticatedClient(string username, string password)
     {
         var client = _factory.CreateClient(new WebApplicationFactoryClientOptions

@@ -1,5 +1,6 @@
 ﻿using LateralGroup.Application.Abstractions.Persistence;
 using LateralGroup.Application.Abstractions.Services;
+using LateralGroup.Application.Exceptions;
 using LateralGroup.Application.Models;
 using LateralGroup.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,10 @@ public class CmsContentQueryService : ICmsContentQueryService
         bool isAdmin, 
         CancellationToken cancellationToken = default)
     {
+
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ValidationException("Id cannot be null or whitespace.");
+
         var query = _readContext.ContentItems.Where(item => item.Id == id);
         var filteredQuery = ApplyFiltering(query, isAdmin);
 

@@ -1,4 +1,5 @@
 using LateralGroup.API.Authentication;
+using LateralGroup.API.Middleware;
 using LateralGroup.Application;
 using LateralGroup.Infrastructure;
 using LateralGroup.Infrastructure.Persistence;
@@ -39,8 +40,11 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference("/docs");
 }
 
+app.UseGlobalExceptionHandling();
+
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+
 
 app.UseAuthentication();
 app.UseAuthorization();

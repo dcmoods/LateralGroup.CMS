@@ -1,4 +1,5 @@
 using LateralGroup.Application.Services;
+using LateralGroup.Application.Abstractions.Services;
 using LateralGroup.Domain.Entities;
 using LateralGroup.Domain.Enums;
 using LateralGroup.Infrastructure.Persistence;
@@ -21,9 +22,10 @@ public sealed class CmsAdminServiceTests
         var service = new CmsAdminService(fixture.WriteDbContext, fixture.Clock, NullLogger<CmsAdminService>.Instance);
         fixture.Clock.UtcNow = new DateTimeOffset(2026, 4, 5, 14, 0, 0, TimeSpan.Zero);
 
-        await service.DisableAsync("item-1");
+        var result = await service.DisableAsync("item-1");
 
         var stored = await fixture.WriteDbContext.ContentItems.SingleAsync(x => x.Id == "item-1");
+        Assert.Equal(CmsAdminActionResult.Updated, result);
         Assert.True(stored.IsDisabledByAdmin);
         Assert.Equal(fixture.Clock.UtcNow, stored.UpdatedUtc);
         Assert.Equal(CmsEventType.Publish, stored.LastEventType);
@@ -41,20 +43,54 @@ public sealed class CmsAdminServiceTests
         var service = new CmsAdminService(fixture.WriteDbContext, fixture.Clock, NullLogger<CmsAdminService>.Instance);
         fixture.Clock.UtcNow = new DateTimeOffset(2026, 4, 5, 14, 0, 0, TimeSpan.Zero);
 
-        await service.EnableAsync("item-1");
+        var result = await service.EnableAsync("item-1");
 
         var stored = await fixture.WriteDbContext.ContentItems.SingleAsync(x => x.Id == "item-1");
+        Assert.Equal(CmsAdminActionResult.Updated, result);
         Assert.False(stored.IsDisabledByAdmin);
         Assert.Equal(fixture.Clock.UtcNow, stored.UpdatedUtc);
     }
 
     [Fact]
-    public async Task EnableAsync_ForMissingItem_DoesNotThrow()
+    public async Task EnableAsync_ForMissingItem_ReturnsNotFound()
     {
         await using var fixture = await AdminFixture.CreateAsync();
         var service = new CmsAdminService(fixture.WriteDbContext, fixture.Clock, NullLogger<CmsAdminService>.Instance);
 
-        await service.EnableAsync("missing-item");
+        var result = await service.EnableAsync("missing-item");
+
+        Assert.Equal(CmsAdminActionResult.NotFound, result);
+    }
+
+    [Fact]
+    public async Task DisableAsync_WhenAlreadyDisabled_ReturnsNoChange()
+    {
+        await using var fixture = await AdminFixture.CreateAsync();
+        var item = CreateItem("item-1");
+        item.DisableByAdmin(new DateTimeOffset(2026, 4, 5, 13, 0, 0, TimeSpan.Zero));
+        fixture.WriteDbContext.ContentItems.Add(item);
+        await fixture.WriteDbContext.SaveChangesAsync();
+
+        var service = new CmsAdminService(fixture.WriteDbContext, fixture.Clock, NullLogger<CmsAdminService>.Instance);
+
+        var result = await service.DisableAsync("item-1");
+
+        Assert.Equal(CmsAdminActionResult.NoChange, result);
+    }
+
+    [Fact]
+    public async Task EnableAsync_WhenAlreadyEnabled_ReturnsNoChange()
+    {
+        await using var fixture = await AdminFixture.CreateAsync();
+        var item = CreateItem("item-1");
+        fixture.WriteDbContext.ContentItems.Add(item);
+        await fixture.WriteDbContext.SaveChangesAsync();
+
+        var service = new CmsAdminService(fixture.WriteDbContext, fixture.Clock, NullLogger<CmsAdminService>.Instance);
+
+        var result = await service.EnableAsync("item-1");
+
+        Assert.Equal(CmsAdminActionResult.NoChange, result);
     }
 
     private static CmsContentItem CreateItem(string id)
