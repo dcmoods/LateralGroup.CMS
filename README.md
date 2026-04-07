@@ -162,7 +162,7 @@ versions - It only affects API visibility
 ### Run the API
 
 ``` bash
-dotnet run --project LateralGroup.API
+dotnet run --project LateralGroup.API --launch-profile https
 ```
 
 ------------------------------------------------------------------------
